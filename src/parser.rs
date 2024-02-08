@@ -1,4 +1,4 @@
-use crate::{ast::*, util::*};
+use crate::{ast::{AstNode, AstNodeData}, util::{is_identifier, is_label, parse_value, print_error}};
 
 pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
     let lines: Vec<&str> = input.split_terminator('\n').map(|l| l.trim()).collect();

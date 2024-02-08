@@ -52,6 +52,13 @@ pub enum AstNodeData {
   Jf(String),
 }
 
+impl AstNodeData {
+  pub fn discriminant(&self) -> u8 {
+    // Safety: got from <https://doc.rust-lang.org/std/mem/fn.discriminant.html>
+    unsafe { *<*const _>::from(self).cast::<u8>() }
+  }
+}
+
 #[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum Value {

@@ -3,6 +3,7 @@ use std::{env, fs, process::exit};
 mod ast;
 mod parser;
 mod resolver;
+mod compiler;
 mod util;
 
 fn main() {
@@ -22,7 +23,6 @@ fn main() {
     };
 
     if contents.is_empty() {
-        eprintln!("File is empty; no bytecode was generated.");
         exit(0);
     }
     
@@ -41,8 +41,14 @@ fn main() {
                 exit(1);
             }
 
+            if compiler::compile(&ast, "test.byt").is_err() {
+                eprintln!("Couldn't write to file.");
+                exit(1);
+            }
+
             dbg!(&ast);
         }
+
         "run" => todo!(),
         
         s => eprintln!("Invalid option: '{s}'. Available options: 'assemble', 'run'.")
