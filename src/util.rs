@@ -29,3 +29,14 @@ pub fn is_identifier(s: &str) -> bool {
 
   true
 }
+
+pub fn is_label(s: &str) -> bool {
+  s.starts_with('#') && is_identifier(&s[1..])
+}
+
+pub fn print_error(msg: &str, code: &str, mut line: usize) {
+  line += 1;
+
+  eprintln!("Error in line {line}: {msg}");
+  eprintln!(" {line} | {code}\n");
+}
