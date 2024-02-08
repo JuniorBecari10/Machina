@@ -66,3 +66,26 @@ pub enum Value {
   Str(String),
   Bool(bool)
 }
+
+impl Value {
+  pub fn encode(&self) -> Vec<u8> {
+    let mut output = vec![];
+    output.push(self.discriminant());
+
+    match self {
+      Value::Num(n) => output.extend_from_slice(&n.to_ne_bytes()),
+      Value::Str(s) => {
+        output.extend_from_slice(&s.len().to_ne_bytes());
+        output.extend_from_slice(s.as_bytes());
+      },
+      Value::Bool(b) => output.push(*b as u8),
+    }
+
+    output
+  }
+
+  pub fn discriminant(&self) -> u8 {
+    // Safety: got from <https://doc.rust-lang.org/std/mem/fn.discriminant.html>
+    unsafe { *<*const _>::from(self).cast::<u8>() }
+  }
+}

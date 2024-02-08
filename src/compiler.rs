@@ -8,13 +8,11 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
 
   for node in ast {
     let n = &node.data;
+    output.push(n.discriminant());
 
     match n {
-        AstNodeData::Label(label) => todo!(),
-        AstNodeData::Pushc(val) => todo!(),
-        AstNodeData::Pushv(var) => todo!(),
-        AstNodeData::Setc(val) => todo!(),
-        AstNodeData::Pop(var) => todo!(),
+        AstNodeData::Pushc(val)
+        | AstNodeData::Setc(val) =>  output.extend_from_slice(&val.encode()),
 
         AstNodeData::Add
         | AstNodeData::Sub
@@ -30,8 +28,12 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
         | AstNodeData::Cmpl
         | AstNodeData::Cmple
         | AstNodeData::Cmpe
-        | AstNodeData::Cmpne => output.push(n.discriminant()),
+        | AstNodeData::Cmpne => {}, // discriminant already pushed
 
+        AstNodeData::Pushv(var) => todo!(),
+        AstNodeData::Pop(var) => todo!(),
+
+        AstNodeData::Label(label) => todo!(),
         AstNodeData::Jmp(label) => todo!(),
         AstNodeData::Jt(label) => todo!(),
         AstNodeData::Jf(label) => todo!(),

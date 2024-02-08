@@ -6,6 +6,8 @@ mod resolver;
 mod compiler;
 mod util;
 
+const FILE_EXTENSION: &str = "byt";
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     
@@ -41,12 +43,10 @@ fn main() {
                 exit(1);
             }
 
-            if compiler::compile(&ast, "test.byt").is_err() {
+            if compiler::compile(&ast, "test.mch").is_err() {
                 eprintln!("Couldn't write to file.");
                 exit(1);
             }
-
-            dbg!(&ast);
         }
 
         "run" => todo!(),
