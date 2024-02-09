@@ -52,3 +52,8 @@ pub fn change_file_extension(filename: &str, extension: &str) -> String {
     format!("{}.{}", filename, extension)
   }
 }
+
+pub fn encode_string(output: &mut Vec<u8>, s: &str) {
+  output.extend_from_slice(&s.len().to_ne_bytes());
+  output.extend_from_slice(s.as_bytes());
+}

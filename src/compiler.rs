@@ -1,6 +1,6 @@
 use std::{fs::File, io::{Error, Write}};
 
-use crate::ast::{AstNode, AstNodeData};
+use crate::{ast::{AstNode, AstNodeData}, util::encode_string};
 
 pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
   let mut file = File::create(path)?;
@@ -12,7 +12,10 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
 
     match n {
         AstNodeData::Pushc(val) => output.extend_from_slice(&val.encode()),
-        AstNodeData::Setc(val, var) => todo!(),
+        AstNodeData::Setc(val, var) => {
+          output.extend_from_slice(&val.encode());
+          encode_string(&mut output, var);
+        },
 
         AstNodeData::Add
         | AstNodeData::Sub
@@ -31,20 +34,20 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
 
         | AstNodeData::Cmpl
         | AstNodeData::Cmple
-        
+
         | AstNodeData::Cmpe
         | AstNodeData::Cmpne
 
         | AstNodeData::Save
         | AstNodeData::Ret => {}, // discriminant already pushed
 
-        AstNodeData::Pushv(var) => todo!(),
-        AstNodeData::Pop(var) => todo!(),
+        AstNodeData::Pushv(var)
+        | AstNodeData::Pop(var) => encode_string(&mut output, var),
 
-        AstNodeData::Label(label) => todo!(),
-        AstNodeData::Jmp(label) => todo!(),
-        AstNodeData::Jt(label) => todo!(),
-        AstNodeData::Jf(label) => todo!(),
+        AstNodeData::Label(label)
+        | AstNodeData::Jmp(label)
+        | AstNodeData::Jt(label)
+        | AstNodeData::Jf(label) => encode_string(&mut output, label),
     }
   }
 

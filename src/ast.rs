@@ -1,3 +1,5 @@
+use crate::util::encode_string;
+
 #[derive(Debug)]
 pub struct AstNode {
   pub data: AstNodeData,
@@ -77,10 +79,7 @@ impl Value {
 
     match self {
       Value::Num(n) => output.extend_from_slice(&n.to_ne_bytes()),
-      Value::Str(s) => {
-        output.extend_from_slice(&s.len().to_ne_bytes());
-        output.extend_from_slice(s.as_bytes());
-      },
+      Value::Str(s) => encode_string(&mut output, s),
       Value::Bool(b) => output.push(*b as u8),
     }
 
