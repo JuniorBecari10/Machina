@@ -23,7 +23,7 @@ pub enum AstNodeData {
   Pushc(Value),
   Pushv(String),
   
-  Setc(Value),
+  Setc(Value, String),
   Pop(String),
 
   Add,
@@ -46,6 +46,9 @@ pub enum AstNodeData {
 
   Cmpe,
   Cmpne,
+
+  Save,
+  Ret,
 
   Jmp(String),
   Jt(String),

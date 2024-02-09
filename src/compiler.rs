@@ -11,24 +11,32 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
     output.push(n.discriminant());
 
     match n {
-        AstNodeData::Pushc(val)
-        | AstNodeData::Setc(val) =>  output.extend_from_slice(&val.encode()),
+        AstNodeData::Pushc(val) => output.extend_from_slice(&val.encode()),
+        AstNodeData::Setc(val, var) => todo!(),
 
         AstNodeData::Add
         | AstNodeData::Sub
         | AstNodeData::Mul
         | AstNodeData::Div
+
         | AstNodeData::Inputn
         | AstNodeData::Inputb
         | AstNodeData::Inputs
+
         | AstNodeData::Print
         | AstNodeData::Println
+
         | AstNodeData::Cmpg
         | AstNodeData::Cmpge
+
         | AstNodeData::Cmpl
         | AstNodeData::Cmple
+        
         | AstNodeData::Cmpe
-        | AstNodeData::Cmpne => {}, // discriminant already pushed
+        | AstNodeData::Cmpne
+
+        | AstNodeData::Save
+        | AstNodeData::Ret => {}, // discriminant already pushed
 
         AstNodeData::Pushv(var) => todo!(),
         AstNodeData::Pop(var) => todo!(),

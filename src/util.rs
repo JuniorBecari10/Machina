@@ -40,3 +40,15 @@ pub fn print_error(msg: &str, code: &str, mut line: usize) {
   eprintln!("Error in line {line}: {msg}");
   eprintln!(" {line} | {code}\n");
 }
+
+pub fn change_file_extension(filename: &str, extension: &str) -> String {
+  if filename.contains('.') {
+    let split: Vec<&str> = filename.split('.').map(|s| s.trim()).collect();
+    let not_last = split[..split.len() - 1].join(".");
+
+    format!("{}.{}", not_last, extension)
+  }
+  else {
+    format!("{}.{}", filename, extension)
+  }
+}

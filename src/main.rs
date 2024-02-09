@@ -6,7 +6,7 @@ mod resolver;
 mod compiler;
 mod util;
 
-const FILE_EXTENSION: &str = "byt";
+const FILE_EXTENSION: &str = "mch";
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -43,7 +43,7 @@ fn main() {
                 exit(1);
             }
 
-            if compiler::compile(&ast, "test.mch").is_err() {
+            if compiler::compile(&ast, &util::change_file_extension(&args[2], FILE_EXTENSION)).is_err() {
                 eprintln!("Couldn't write to file.");
                 exit(1);
             }

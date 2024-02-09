@@ -68,8 +68,8 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                 }
 
                 "setc" => {
-                    if args.len() != 1 {
-                        print_error(&format!("'setc' instruction requires 1 argument, got {}", args.len()), line, i);
+                    if args.len() != 2 {
+                        print_error(&format!("'setc' instruction requires 2 arguments, got {}", args.len()), line, i);
                         
                         had_error = true;
                         break;
@@ -85,7 +85,14 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         }
                     };
 
-                    nodes.push(AstNode::new(AstNodeData::Setc(value), line.into(), i));
+                    if !is_identifier(args[1]) {
+                        print_error(&format!("Identifier '{}' is not valid (valid identifiers only contain letters, numbers and underscores; the first character must not be a number)", args[0]), line, i);
+
+                        had_error = true;
+                        break;
+                    }
+
+                    nodes.push(AstNode::new(AstNodeData::Setc(value, args[1].into()), line.into(), i));
                 }
 
                 "pop" => {
@@ -126,6 +133,9 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
 
                 "cmpe" => nodes.push(AstNode::new(AstNodeData::Cmpe, line.into(), i)),
                 "cmpne" => nodes.push(AstNode::new(AstNodeData::Cmpne, line.into(), i)),
+
+                "save" => nodes.push(AstNode::new(AstNodeData::Save, line.into(), i)),
+                "ret" => nodes.push(AstNode::new(AstNodeData::Ret, line.into(), i)),
 
                 "jmp" => {
                     if args.len() != 1 {
