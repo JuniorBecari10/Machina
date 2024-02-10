@@ -4,6 +4,7 @@ mod ast;
 mod parser;
 mod resolver;
 mod compiler;
+mod interpreter;
 mod util;
 
 const FILE_EXTENSION: &str = "mch";
@@ -49,7 +50,18 @@ fn main() {
             }
         }
 
-        "run" => todo!(),
+        "run" => {
+            let parser_res = parser::parse_reduced(&contents);
+
+            let ast = match parser_res {
+                Ok(a) => a,
+                Err(_) => exit(1)
+            };
+
+            if interpreter::interpret(&ast).is_err() {
+                exit(1);
+            }
+        }
         
         s => eprintln!("Invalid option: '{s}'. Available options: 'assemble', 'run'.")
     }

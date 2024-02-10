@@ -41,6 +41,10 @@ pub fn print_error(msg: &str, code: &str, mut line: usize) {
   eprintln!(" {line} | {code}\n");
 }
 
+pub fn print_error_reduced(msg: &str) {
+  eprintln!("Error: {msg}");
+}
+
 pub fn change_file_extension(filename: &str, extension: &str) -> String {
   if filename.contains('.') {
     let split: Vec<&str> = filename.split('.').map(|s| s.trim()).collect();

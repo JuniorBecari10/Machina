@@ -17,6 +17,9 @@ impl AstNode {
   }
 }
 
+#[derive(Debug)]
+pub struct ReducedAstNode(pub AstNodeData);
+
 #[derive(Debug, Clone)]
 #[repr(u8)]
 pub enum AstNodeData {

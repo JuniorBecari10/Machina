@@ -1,11 +1,10 @@
-use crate::{ast::{AstNode, AstNodeData}, util::{is_identifier, is_label, parse_value, print_error}};
+use crate::{ast::{AstNode, AstNodeData, ReducedAstNode}, util::{is_identifier, is_label, parse_value, print_error, print_error_reduced}};
 
 pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
-    let lines: Vec<&str> = input.split_terminator('\n').map(|l| l.trim()).collect();
     let mut had_error = false;
     let mut nodes: Vec<AstNode> = vec![];
     
-    for (i, line) in lines.into_iter().enumerate() {
+    for (i, line) in input.lines().into_iter().enumerate() {
         if line.is_empty() {
           continue;
         }
@@ -201,4 +200,52 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
     }
     
     if had_error { Err(()) } else { Ok(nodes) }
+}
+
+pub fn parse_reduced(input: &str) -> Result<Vec<ReducedAstNode>, ()> {
+    let mut nodes = vec![];
+    let bytes: Vec<u8> = input.bytes().collect();
+
+    let mut count: usize = 0;
+    while count <= bytes.len() {
+        let ch = bytes[count];
+
+        match ch as u32 {
+            0 => {
+                let name = match parse_string(&bytes, &mut count) {
+                    Some(n) => n,
+                    None => {
+                        print_error_reduced("Bytecode size isn't long enough to properly parse a string");
+                        return Err(());
+                    }
+                };
+
+                nodes.push(ReducedAstNode(AstNodeData::Label(name)));
+            },
+        }
+
+        count += 1;
+    }
+    
+    Ok(nodes)
+}
+
+fn parse_string(slice: &[u8], count: &mut usize) -> Option<String> {
+    let c = *count;
+
+    if slice.len() >= 5 {
+        let len_bytes: [u8; 4] = slice[c..c + 4].try_into().unwrap();
+        let len = u32::from_ne_bytes(len_bytes) as usize;
+
+        if slice.len() >= 5 + len {
+            let data = String::from_utf8_lossy(&slice[5..5 + len]).to_owned();
+            Some(data)
+        }
+        else {
+            None
+        }
+    }
+    else {
+        None
+    }
 }
