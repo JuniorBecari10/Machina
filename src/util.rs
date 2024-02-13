@@ -37,7 +37,7 @@ pub fn is_label(s: &str) -> bool {
 pub fn print_error(msg: &str, code: &str, mut line: usize) {
   line += 1;
 
-  eprintln!("Error in line {line}: {msg}");
+  eprintln!(" [X] Error in line {line}: {msg}");
   eprintln!(" {line} | {code}\n");
 }
 
@@ -55,9 +55,4 @@ pub fn change_file_extension(filename: &str, extension: &str) -> String {
   else {
     format!("{}.{}", filename, extension)
   }
-}
-
-pub fn encode_string(output: &mut Vec<u8>, s: &str) {
-  output.extend_from_slice(&s.len().to_ne_bytes());
-  output.extend_from_slice(s.as_bytes());
 }

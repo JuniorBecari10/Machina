@@ -1,4 +1,4 @@
-use crate::{ast::{AstNode, AstNodeData, ReducedAstNode}, util::{is_identifier, is_label, parse_value, print_error, print_error_reduced}};
+use crate::{ast::{AstNode, AstNodeData, ReducedAstNode, Value}, util::{is_identifier, is_label, parse_value, print_error, print_error_reduced}};
 
 pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
     let mut had_error = false;
@@ -207,11 +207,12 @@ pub fn parse_reduced(input: &str) -> Result<Vec<ReducedAstNode>, ()> {
     let bytes: Vec<u8> = input.bytes().collect();
 
     let mut count: usize = 0;
-    while count <= bytes.len() {
-        let ch = bytes[count];
+    while count < bytes.len() {
+        let inst = bytes[count];
+        count += 1;
 
-        match ch as u32 {
-            0 => {
+        match inst {
+            0 => { // Label
                 let name = match parse_string(&bytes, &mut count) {
                     Some(n) => n,
                     None => {
@@ -222,6 +223,23 @@ pub fn parse_reduced(input: &str) -> Result<Vec<ReducedAstNode>, ()> {
 
                 nodes.push(ReducedAstNode(AstNodeData::Label(name)));
             },
+
+            1 => { // Pushv
+                let value = match parse_value_reduced(&bytes, &mut count) {
+                    Some(n) => n,
+                    None => {
+                        print_error_reduced("Bytecode size isn't long enough to properly parse a value");
+                        return Err(());
+                    }
+                };
+
+                nodes.push(ReducedAstNode(AstNodeData::Pushc(value)));
+            }
+
+            _ => {
+                println!{"inst: {inst}"};
+                todo!()
+            }
         }
 
         count += 1;
@@ -231,14 +249,19 @@ pub fn parse_reduced(input: &str) -> Result<Vec<ReducedAstNode>, ()> {
 }
 
 fn parse_string(slice: &[u8], count: &mut usize) -> Option<String> {
-    let c = *count;
+    let mut c = *count;
 
-    if slice.len() >= 5 {
-        let len_bytes: [u8; 4] = slice[c..c + 4].try_into().unwrap();
+    if slice.len() - c >= 4 {
+        let len_bytes: [u8; 4] = slice[c..(c + 4)].try_into().unwrap();
         let len = u32::from_ne_bytes(len_bytes) as usize;
 
-        if slice.len() >= 5 + len {
-            let data = String::from_utf8_lossy(&slice[5..5 + len]).to_owned();
+        c += 4;
+        *count += 4;
+
+        if slice.len() - c >= len {
+            let data = String::from_utf8_lossy(&slice[c..(c + len)]).into();
+
+            *count += len - 1;
             Some(data)
         }
         else {
@@ -247,5 +270,40 @@ fn parse_string(slice: &[u8], count: &mut usize) -> Option<String> {
     }
     else {
         None
+    }
+}
+
+fn parse_value_reduced(slice: &[u8], count: &mut usize) -> Option<Value> {
+    let c = *count;
+
+    match c {
+        0 => { // Num
+            if slice.len() >= 9 {
+                let bytes: [u8; 8] = slice[c..c + 8].try_into().unwrap();
+                let num = f64::from_ne_bytes(bytes);
+
+                Some(Value::Num(num))
+            }
+            else {
+                None
+            }
+        }
+
+        1 => { // Str
+            let s = parse_string(slice, count)?;
+            Some(Value::Str(s))
+        }
+
+        2 => { // Bool
+            if slice.len() >= 2 {
+                let value = slice[c] != 0;
+                Some(Value::Bool(value))
+            }
+            else {
+                None
+            }
+        }
+
+        _ => None
     }
 }

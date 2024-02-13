@@ -1,6 +1,6 @@
 use std::{fs::File, io::{Error, Write}};
 
-use crate::{ast::{AstNode, AstNodeData}, util::encode_string};
+use crate::ast::{AstNode, AstNodeData};
 
 pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
   let mut file = File::create(path)?;
@@ -53,4 +53,9 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
 
   file.write_all(&output)?;
   Ok(())
+}
+
+pub fn encode_string(output: &mut Vec<u8>, s: &str) {
+  output.extend_from_slice(&(s.len() as u32).to_ne_bytes());
+  output.extend_from_slice(s.as_bytes());
 }

@@ -1,4 +1,4 @@
-use crate::util::encode_string;
+use crate::compiler::encode_string;
 
 #[derive(Debug)]
 pub struct AstNode {
