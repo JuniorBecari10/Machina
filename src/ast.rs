@@ -78,6 +78,22 @@ pub enum Value {
 }
 
 impl Value {
+  pub fn as_str(&self) -> String {
+    match self {
+      Value::Num(n) => format!("{}", n),
+      Value::Str(s) => s.clone(),
+      Value::Bool(b) => format!("{}", b),
+    }
+  }
+
+  pub fn as_str_debug(&self) -> String {
+    match self {
+      Value::Num(n) => format!("num {}", n),
+      Value::Str(s) => format!("str \"{}\"", s),
+      Value::Bool(b) => format!("bool {}", b),
+    }
+  }
+
   pub fn encode(&self) -> Vec<u8> {
     let mut output = vec![];
     output.push(self.discriminant());

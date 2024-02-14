@@ -58,8 +58,6 @@ fn main() {
                 Err(_) => exit(1)
             };
 
-            dbg!(&ast);
-
             if interpreter::interpret(&ast).is_err() {
                 exit(1);
             }
