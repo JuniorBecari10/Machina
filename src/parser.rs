@@ -1,5 +1,29 @@
 use crate::{ast::{AstNode, AstNodeData, ReducedAstNode, Value}, util::{is_identifier, is_label, parse_value, print_error, print_error_reduced}};
 
+macro_rules! parse_string {
+    ($bytes: expr, $count: expr, $inst: literal) => {
+        match parse_string($bytes, $count) {
+            Some(n) => n,
+            None => {
+                print_error_reduced(&format!("While parsing '{}' instruction: Bytecode size isn't long enough to properly parse a string", $inst));
+                return Err(());
+            }
+        }
+    }
+}
+
+macro_rules! parse_value {
+    ($bytes: expr, $count: expr, $inst: literal) => {
+        match parse_value_reduced($bytes, $count) {
+            Some(n) => n,
+            None => {
+                print_error_reduced(&format!("While parsing '{}' instruction: Bytecode size isn't long enough to properly parse a value", $inst));
+                return Err(());
+            }
+        }
+    }
+}
+
 pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
     let mut had_error = false;
     let mut nodes: Vec<AstNode> = vec![];
@@ -94,7 +118,7 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                     nodes.push(AstNode::new(AstNodeData::Setc(value, args[1].into()), line.into(), i));
                 }
 
-                "pop" => {
+                "popv" => {
                     if args.len() != 1 {
                         print_error(&format!("'pop' instruction requires 1 argument, got {}", args.len()), line, i);
                         
@@ -109,8 +133,10 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         break;
                     }
 
-                    nodes.push(AstNode::new(AstNodeData::Pop(args[0].into()), line.into(), i));
+                    nodes.push(AstNode::new(AstNodeData::Popv(args[0].into()), line.into(), i));
                 }
+
+                "pop" => nodes.push(AstNode::new(AstNodeData::Pop, line.into(), i)),
 
                 "add" => nodes.push(AstNode::new(AstNodeData::Add, line.into(), i)),
                 "sub" => nodes.push(AstNode::new(AstNodeData::Sub, line.into(), i)),
@@ -212,37 +238,54 @@ pub fn parse_reduced(input: &str) -> Result<Vec<ReducedAstNode>, ()> {
         count += 1;
 
         match inst {
-            0 => { // Label
-                let name = match parse_string(&bytes, &mut count) {
-                    Some(n) => n,
-                    None => {
-                        print_error_reduced("Bytecode size isn't long enough to properly parse a string");
-                        return Err(());
-                    }
-                };
+            0 => nodes.push(ReducedAstNode(AstNodeData::Label(parse_string!(&bytes, &mut count, "label")))),
+            1 => nodes.push(ReducedAstNode(AstNodeData::Pushc(parse_value!(&bytes, &mut count, "pushc")))),
+            2 => nodes.push(ReducedAstNode(AstNodeData::Pushv(parse_string!(&bytes, &mut count, "label")))),
 
-                nodes.push(ReducedAstNode(AstNodeData::Label(name)));
-            },
+            3 => { // Setc
+                let value = parse_value!(&bytes, &mut count, "setc");
+                let name = parse_string!(&bytes, &mut count, "setc");
 
-            1 => { // Pushv
-                let value = match parse_value_reduced(&bytes, &mut count) {
-                    Some(n) => n,
-                    None => {
-                        print_error_reduced("Bytecode size isn't long enough to properly parse a value");
-                        return Err(());
-                    }
-                };
-
-                nodes.push(ReducedAstNode(AstNodeData::Pushc(value)));
+                nodes.push(ReducedAstNode(AstNodeData::Setc(value, name)));
             }
+
+            4 => nodes.push(ReducedAstNode(AstNodeData::Popv(parse_string!(&bytes, &mut count, "popv")))),
+
+            5 => nodes.push(ReducedAstNode(AstNodeData::Pop)),
+
+            6 => nodes.push(ReducedAstNode(AstNodeData::Add)),
+            7 => nodes.push(ReducedAstNode(AstNodeData::Sub)),
+            8 => nodes.push(ReducedAstNode(AstNodeData::Mul)),
+            9 => nodes.push(ReducedAstNode(AstNodeData::Div)),
+
+            10 => nodes.push(ReducedAstNode(AstNodeData::Inputn)),
+            11 => nodes.push(ReducedAstNode(AstNodeData::Inputb)),
+            12 => nodes.push(ReducedAstNode(AstNodeData::Inputs)),
+
+            13 => nodes.push(ReducedAstNode(AstNodeData::Print)),
+            14 => nodes.push(ReducedAstNode(AstNodeData::Println)),
+
+            15 => nodes.push(ReducedAstNode(AstNodeData::Cmpg)),
+            16 => nodes.push(ReducedAstNode(AstNodeData::Cmpge)),
+
+            17 => nodes.push(ReducedAstNode(AstNodeData::Cmpl)),
+            18 => nodes.push(ReducedAstNode(AstNodeData::Cmple)),
+
+            19 => nodes.push(ReducedAstNode(AstNodeData::Cmpe)),
+            20 => nodes.push(ReducedAstNode(AstNodeData::Cmpne)),
+
+            21 => nodes.push(ReducedAstNode(AstNodeData::Save)),
+            22 => nodes.push(ReducedAstNode(AstNodeData::Ret)),
+
+            23 => nodes.push(ReducedAstNode(AstNodeData::Jmp(parse_string!(&bytes, &mut count, "jmp")))),
+            24 => nodes.push(ReducedAstNode(AstNodeData::Jt(parse_string!(&bytes, &mut count, "jt")))),
+            25 => nodes.push(ReducedAstNode(AstNodeData::Jf(parse_string!(&bytes, &mut count, "jf")))),
 
             _ => {
-                println!{"inst: {inst}"};
-                todo!()
+                print_error_reduced(&format!("Invalid instruction code: {}", inst));
+                return Err(());
             }
         }
-
-        count += 1;
     }
     
     Ok(nodes)
@@ -261,7 +304,7 @@ fn parse_string(slice: &[u8], count: &mut usize) -> Option<String> {
         if slice.len() - c >= len {
             let data = String::from_utf8_lossy(&slice[c..(c + len)]).into();
 
-            *count += len - 1;
+            *count += len;
             Some(data)
         }
         else {
@@ -274,14 +317,19 @@ fn parse_string(slice: &[u8], count: &mut usize) -> Option<String> {
 }
 
 fn parse_value_reduced(slice: &[u8], count: &mut usize) -> Option<Value> {
-    let c = *count;
+    let mut c = *count;
+    let kind = slice[c];
 
-    match c {
+    c += 1;
+    *count += 1;
+
+    match kind {
         0 => { // Num
-            if slice.len() >= 9 {
-                let bytes: [u8; 8] = slice[c..c + 8].try_into().unwrap();
+            if slice.len() - c >= 8 {
+                let bytes: [u8; 8] = slice[c..(c + 8)].try_into().unwrap();
                 let num = f64::from_ne_bytes(bytes);
 
+                *count += 8;
                 Some(Value::Num(num))
             }
             else {
@@ -297,6 +345,8 @@ fn parse_value_reduced(slice: &[u8], count: &mut usize) -> Option<Value> {
         2 => { // Bool
             if slice.len() >= 2 {
                 let value = slice[c] != 0;
+
+                *count += 1;
                 Some(Value::Bool(value))
             }
             else {

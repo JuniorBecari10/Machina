@@ -1,5 +1,5 @@
 use crate::ast::*;
 
-pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
+pub fn interpret(_ast: &[ReducedAstNode]) -> Result<(), ()> {
   todo!()
 }

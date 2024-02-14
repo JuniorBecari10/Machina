@@ -29,7 +29,9 @@ pub enum AstNodeData {
   Pushv(String),
   
   Setc(Value, String),
-  Pop(String),
+  Popv(String),
+
+  Pop,
 
   Add,
   Sub,

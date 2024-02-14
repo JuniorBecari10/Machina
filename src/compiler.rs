@@ -22,6 +22,8 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
         | AstNodeData::Mul
         | AstNodeData::Div
 
+        | AstNodeData::Pop
+
         | AstNodeData::Inputn
         | AstNodeData::Inputb
         | AstNodeData::Inputs
@@ -42,7 +44,7 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
         | AstNodeData::Ret => {}, // discriminant already pushed
 
         AstNodeData::Pushv(var)
-        | AstNodeData::Pop(var) => encode_string(&mut output, var),
+        | AstNodeData::Popv(var) => encode_string(&mut output, var),
 
         AstNodeData::Label(label)
         | AstNodeData::Jmp(label)

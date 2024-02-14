@@ -37,7 +37,7 @@ pub fn is_label(s: &str) -> bool {
 pub fn print_error(msg: &str, code: &str, mut line: usize) {
   line += 1;
 
-  eprintln!(" [X] Error in line {line}: {msg}");
+  eprintln!("  [X] Error in line {line}: {msg}");
   eprintln!(" {line} | {code}\n");
 }
 
