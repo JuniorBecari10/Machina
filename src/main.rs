@@ -16,21 +16,21 @@ fn main() {
         eprintln!("Usage: machina assemble/run <file>");
         exit(1);
     }
-
-    let contents = match fs::read_to_string(&args[2]).ok() {
-        Some(c) => c,
-        None => {
-            eprintln!("Couldn't read file '{}'", &args[2]);
-            exit(1);
-        }
-    };
-
-    if contents.is_empty() {
-        exit(0);
-    }
     
     match args[1].as_str() {
         "assemble" => {
+            let contents = match fs::read_to_string(&args[2]).ok() {
+                Some(c) => c,
+                None => {
+                    eprintln!("Couldn't read file '{}'", &args[2]);
+                    exit(1);
+                }
+            };
+
+            if contents.is_empty() {
+                exit(0);
+            }
+
             let parser_res = parser::parse(&contents);
 
             let ast = match parser_res {
@@ -51,6 +51,14 @@ fn main() {
         }
 
         "run" => {
+            let contents = match util::read_to_vec(&args[2]).ok() {
+                Some(c) => c,
+                None => {
+                    eprintln!("Couldn't read file '{}'", &args[2]);
+                    exit(1);
+                }
+            };
+
             let parser_res = parser::parse_reduced(&contents);
 
             let ast = match parser_res {

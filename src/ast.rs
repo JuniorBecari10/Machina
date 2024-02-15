@@ -54,9 +54,6 @@ pub enum AstNodeData {
   Cmpe,
   Cmpne,
 
-  Save,
-  Ret,
-
   Jmp(String),
   Jt(String),
   Jf(String),

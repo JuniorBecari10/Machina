@@ -38,10 +38,7 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
         | AstNodeData::Cmple
 
         | AstNodeData::Cmpe
-        | AstNodeData::Cmpne
-
-        | AstNodeData::Save
-        | AstNodeData::Ret => {}, // discriminant already pushed
+        | AstNodeData::Cmpne => {}, // discriminant already pushed
 
         AstNodeData::Pushv(var)
         | AstNodeData::Popv(var) => encode_string(&mut output, var),

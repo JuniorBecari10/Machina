@@ -1,4 +1,4 @@
-use crate::{ast::{AstNode, AstNodeData, ReducedAstNode, Value}, util::{is_identifier, is_label, parse_value, print_error, print_error_reduced}};
+use crate::{ast::{AstNode, AstNodeData, ReducedAstNode, Value}, util::{is_identifier, is_label, parse_value, print_error, print_error_reduced, custom_split}};
 
 macro_rules! parse_string {
     ($bytes: expr, $count: expr, $inst: literal) => {
@@ -33,7 +33,8 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
           continue;
         }
 
-        let tokens: Vec<&str> = line.split(' ').collect();
+        let tokens_owned = custom_split(line);
+        let tokens: Vec<&str> = tokens_owned.iter().map(|s| s.as_str()).collect();
         
         let first = tokens.first().cloned();
         let args = &tokens[1..];
@@ -159,9 +160,6 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                 "cmpe" => nodes.push(AstNode::new(AstNodeData::Cmpe, line.into(), i)),
                 "cmpne" => nodes.push(AstNode::new(AstNodeData::Cmpne, line.into(), i)),
 
-                "save" => nodes.push(AstNode::new(AstNodeData::Save, line.into(), i)),
-                "ret" => nodes.push(AstNode::new(AstNodeData::Ret, line.into(), i)),
-
                 "jmp" => {
                     if args.len() != 1 {
                         print_error(&format!("'jmp' instruction requires 1 argument, got {}", args.len()), line, i);
@@ -228,9 +226,8 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
     if had_error { Err(()) } else { Ok(nodes) }
 }
 
-pub fn parse_reduced(input: &str) -> Result<Vec<ReducedAstNode>, ()> {
+pub fn parse_reduced(bytes: &[u8]) -> Result<Vec<ReducedAstNode>, ()> {
     let mut nodes = vec![];
-    let bytes: Vec<u8> = input.bytes().collect();
 
     let mut count: usize = 0;
     while count < bytes.len() {
@@ -238,18 +235,18 @@ pub fn parse_reduced(input: &str) -> Result<Vec<ReducedAstNode>, ()> {
         count += 1;
 
         match inst {
-            0 => nodes.push(ReducedAstNode(AstNodeData::Label(parse_string!(&bytes, &mut count, "label")))),
-            1 => nodes.push(ReducedAstNode(AstNodeData::Pushc(parse_value!(&bytes, &mut count, "pushc")))),
-            2 => nodes.push(ReducedAstNode(AstNodeData::Pushv(parse_string!(&bytes, &mut count, "label")))),
+            0 => nodes.push(ReducedAstNode(AstNodeData::Label(parse_string!(bytes, &mut count, "label")))),
+            1 => nodes.push(ReducedAstNode(AstNodeData::Pushc(parse_value!(bytes, &mut count, "pushc")))),
+            2 => nodes.push(ReducedAstNode(AstNodeData::Pushv(parse_string!(bytes, &mut count, "label")))),
 
             3 => { // Setc
-                let value = parse_value!(&bytes, &mut count, "setc");
-                let name = parse_string!(&bytes, &mut count, "setc");
+                let value = parse_value!(bytes, &mut count, "setc");
+                let name = parse_string!(bytes, &mut count, "setc");
 
                 nodes.push(ReducedAstNode(AstNodeData::Setc(value, name)));
             }
 
-            4 => nodes.push(ReducedAstNode(AstNodeData::Popv(parse_string!(&bytes, &mut count, "popv")))),
+            4 => nodes.push(ReducedAstNode(AstNodeData::Popv(parse_string!(bytes, &mut count, "popv")))),
 
             5 => nodes.push(ReducedAstNode(AstNodeData::Pop)),
 
@@ -274,12 +271,9 @@ pub fn parse_reduced(input: &str) -> Result<Vec<ReducedAstNode>, ()> {
             19 => nodes.push(ReducedAstNode(AstNodeData::Cmpe)),
             20 => nodes.push(ReducedAstNode(AstNodeData::Cmpne)),
 
-            21 => nodes.push(ReducedAstNode(AstNodeData::Save)),
-            22 => nodes.push(ReducedAstNode(AstNodeData::Ret)),
-
-            23 => nodes.push(ReducedAstNode(AstNodeData::Jmp(parse_string!(&bytes, &mut count, "jmp")))),
-            24 => nodes.push(ReducedAstNode(AstNodeData::Jt(parse_string!(&bytes, &mut count, "jt")))),
-            25 => nodes.push(ReducedAstNode(AstNodeData::Jf(parse_string!(&bytes, &mut count, "jf")))),
+            21 => nodes.push(ReducedAstNode(AstNodeData::Jmp(parse_string!(bytes, &mut count, "jmp")))),
+            22 => nodes.push(ReducedAstNode(AstNodeData::Jt(parse_string!(bytes, &mut count, "jt")))),
+            23 => nodes.push(ReducedAstNode(AstNodeData::Jf(parse_string!(bytes, &mut count, "jf")))),
 
             _ => {
                 print_error_reduced(&format!("Invalid instruction code: {}", inst));

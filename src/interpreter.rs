@@ -2,28 +2,8 @@ use std::{collections::HashMap, io::{self, Write}};
 
 use crate::{ast::*, util::print_error_reduced};
 
-struct Environment {
-  variables: HashMap<String, Value>,
-  enclosing: Option<Box<Environment>>,
-}
-
-impl Environment {
-  fn new_empty() -> Self {
-    Self {
-      variables: HashMap::new(),
-      enclosing: None
-    }
-  }
-
-  fn new_empty_enclosing(enclosing: Self) -> Self {
-    Self {
-      variables: HashMap::new(),
-      enclosing: Some(Box::new(enclosing)),
-    }
-  }
-
-  
-}
+type LabelMap = HashMap<String, usize>;
+type VariableMap = HashMap<String, Value>;
 
 macro_rules! try_pop {
   ($operation_stack: expr, $inst: literal) => {
@@ -39,9 +19,9 @@ macro_rules! try_pop {
 
 pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
   let labels = search_labels(ast);
-  let mut variables: HashMap<String, Value> = HashMap::new();
-  
+
   let mut operation_stack: Vec<Value> = vec![];
+  let mut variables: VariableMap = HashMap::new();
   
   let mut count: usize = 0;
   while count < ast.len() {
@@ -247,8 +227,8 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
       },
       
       AstNodeData::Cmpe => {
-        let a = try_pop!(operation_stack, "mul");
-        let b = try_pop!(operation_stack, "mul");
+        let a = try_pop!(operation_stack, "cmpe");
+        let b = try_pop!(operation_stack, "cmpe");
         
         if let Value::Num(a) = a {
           if let Value::Num(b) = b {
@@ -271,8 +251,8 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
         }
       },
       AstNodeData::Cmpne => {
-        let a = try_pop!(operation_stack, "mul");
-        let b = try_pop!(operation_stack, "mul");
+        let a = try_pop!(operation_stack, "cmpne");
+        let b = try_pop!(operation_stack, "cmpne");
         
         if let Value::Num(a) = a {
           if let Value::Num(b) = b {
@@ -294,9 +274,6 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
           return Err(());
         }
       },
-      
-      AstNodeData::Save => todo!(),
-      AstNodeData::Ret => todo!(),
       
       AstNodeData::Jmp(label) => {
         let index = match labels.get(&label) {
@@ -361,7 +338,7 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
   Ok(())
 }
 
-fn search_labels(ast: &[ReducedAstNode]) -> HashMap<String, usize> {
+fn search_labels(ast: &[ReducedAstNode]) -> LabelMap {
   let mut map = HashMap::new();
   
   for (i, n) in ast.iter().enumerate() {
@@ -376,4 +353,5 @@ fn search_labels(ast: &[ReducedAstNode]) -> HashMap<String, usize> {
 fn input(out: &mut String) {
   io::stdout().flush().unwrap();
   io::stdin().read_line(out).unwrap();
+  *out = out.trim().into();
 }
