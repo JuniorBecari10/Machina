@@ -5,7 +5,7 @@ macro_rules! parse_string {
         match parse_string($bytes, $count) {
             Some(n) => n,
             None => {
-                print_error_reduced(&format!("While parsing '{}' instruction: Bytecode size isn't long enough to properly parse a string", $inst));
+                print_error_reduced(&format!("While parsing '{}' instruction: Bytecode size isn't long enough to properly parse a string", $inst), *$count);
                 return Err(());
             }
         }
@@ -17,7 +17,7 @@ macro_rules! parse_value {
         match parse_value_reduced($bytes, $count) {
             Some(n) => n,
             None => {
-                print_error_reduced(&format!("While parsing '{}' instruction: Bytecode size isn't long enough to properly parse a value", $inst));
+                print_error_reduced(&format!("While parsing '{}' instruction: Bytecode size isn't long enough to properly parse a value", $inst), *$count);
                 return Err(());
             }
         }
@@ -276,7 +276,7 @@ pub fn parse_reduced(bytes: &[u8]) -> Result<Vec<ReducedAstNode>, ()> {
             23 => nodes.push(ReducedAstNode(AstNodeData::Jf(parse_string!(bytes, &mut count, "jf")))),
 
             _ => {
-                print_error_reduced(&format!("Invalid instruction code: {}", inst));
+                print_error_reduced(&format!("Invalid instruction code: {}", inst), count);
                 return Err(());
             }
         }

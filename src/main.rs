@@ -51,7 +51,7 @@ fn main() {
         }
 
         "run" => {
-            let contents = match util::read_to_vec(&args[2]).ok() {
+            let contents = match fs::read(&args[2]).ok() {
                 Some(c) => c,
                 None => {
                     eprintln!("Couldn't read file '{}'", &args[2]);

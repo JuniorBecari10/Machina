@@ -1,5 +1,3 @@
-use std::{fs::File, io::{self, Read}};
-
 use crate::ast::*;
 
 pub fn parse_value(s: &str) -> Option<Value> {
@@ -43,8 +41,8 @@ pub fn print_error(msg: &str, code: &str, mut line: usize) {
   eprintln!(" {line} | {code}\n");
 }
 
-pub fn print_error_reduced(msg: &str) {
-  eprintln!("Error: {msg}");
+pub fn print_error_reduced(msg: &str, pc: usize) {
+  eprintln!("Error (pc = {pc}): {msg}");
 }
 
 pub fn change_file_extension(filename: &str, extension: &str) -> String {
@@ -57,15 +55,6 @@ pub fn change_file_extension(filename: &str, extension: &str) -> String {
   else {
     format!("{}.{}", filename, extension)
   }
-}
-
-pub fn read_to_vec(file: &str) -> io::Result<Vec<u8>> {
-  let mut file = File::open(file)?;
-
-  let mut buffer = vec![];
-  file.read_to_end(&mut buffer)?;
-
-  Ok(buffer)
 }
 
 pub fn custom_split(input: &str) -> Vec<String> {
