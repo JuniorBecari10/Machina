@@ -10,7 +10,7 @@ macro_rules! try_pop {
     match $operation_stack.pop() {
       Some(v) => v,
       None => {
-        print_error_reduced(&format!("In 'add' instruction: Attempt to pop the operation stack while being empty"), $count); // TODO | diverge from first and second operand
+        print_error_reduced(&format!("In '{}' instruction: Attempt to pop the operation stack while being empty", $inst), $count); // TODO | diverge from first and second operand
         return Err(());
       }
     }
@@ -46,7 +46,7 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
         });
       },
       
-      AstNodeData::Pop => { operation_stack.pop(); },
+      AstNodeData::Pop => { try_pop!(operation_stack, "pop", count); },
       
       AstNodeData::Add => {
         let a = try_pop!(operation_stack, "add", count);
@@ -162,7 +162,7 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
       }
       
       AstNodeData::Print => print!("{}", try_pop!(operation_stack, "print", count).as_str()),
-      AstNodeData::Println => println!("{}", try_pop!(operation_stack, "print", count).as_str()),
+      AstNodeData::Println => println!("{}", try_pop!(operation_stack, "println", count).as_str()),
       
       AstNodeData::Cmpg => {
         let a = try_pop!(operation_stack, "cmpg", count);
