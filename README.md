@@ -8,6 +8,24 @@ Machina is a bytecode language, which is very simple and its syntax is close to 
 
 This program contains an assembler and an interpreter, to run assembled Machina code.
 
+Although it is close to Assembly, it is also strongly typed.
+
+## How to Use
+
+```
+Usage: machina assemble/run <file>
+```
+
+The program accepts two CLI options: `assemble` and `run`.
+
+- `assemble`:
+
+Reads the provided source file, and assembles it into Machina bytecode.
+
+- `run`:
+
+Reads the provided bytecode file, and interprets it.
+
 ## Internals
 
 The Machina interpreter works with:
@@ -18,6 +36,8 @@ The Machina interpreter works with:
 ## Syntax
 
 There are 23 instructions and 3 data types in Machina. Although the number of instructions is low, the language is [Turing-complete](https://en.wikipedia.org/wiki/Turing_completeness) and very fast.
+
+### Instructions
 
 Instruction|Description
 ---|---
@@ -45,6 +65,14 @@ Instruction|Description
 `jt <label>`|Pops the last item from the stack and if it is equal to `true`, jumps to the specified label.
 `jf <label>`|Pops the last item from the stack and if it is equal to `false`, jumps to the specified label.
 
+### Types
+
+Type|Description|Rust Equivalent
+---|---|---
+`num`|Number (float of 64 bits)|`f64`
+`str`|String|`String`
+`bool`|Boolean|`bool`
+
 Labels are declared using `#` as prefix.
 
 In `jmp`, `jt` and `jf` instructions, labels should be prefixed with `#` too.
@@ -58,4 +86,24 @@ pushc 20
 
 add
 println
+```
+
+Simple counter:
+```
+setc 0 counter
+
+#loop
+pushv counter
+println
+
+pushv counter
+pushc 1
+add
+popv counter
+
+pushv counter
+pushc 10
+
+cmpg
+jt #loop
 ```

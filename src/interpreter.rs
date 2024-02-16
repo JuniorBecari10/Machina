@@ -10,7 +10,7 @@ macro_rules! try_pop {
     match $operation_stack.pop() {
       Some(v) => v,
       None => {
-        print_error_reduced(&format!("In 'add' instruction: Attempt to pop the operation stack while being empty")); // TODO! diverge from first and second operand
+        print_error_reduced(&format!("In 'add' instruction: Attempt to pop the operation stack while being empty")); // TODO | diverge from first and second operand
         return Err(());
       }
     }
@@ -35,7 +35,7 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
         None => print_error_reduced(&format!("In 'pushv' instruction: Variable '{}' doesn't exist", var)),
       },
       
-      AstNodeData::Setc(value, var) => { variables.insert(var, value); }, // TODO! check if the variable wasn't present
+      AstNodeData::Setc(value, var) => { variables.insert(var, value); }, // TODO | check if the variable wasn't present
       AstNodeData::Popv(var) => {
         variables.insert(var, match operation_stack.pop() {
           Some(v) => v,
