@@ -22,6 +22,9 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
         | AstNodeData::Mul
         | AstNodeData::Div
 
+        | AstNodeData::Inc
+        | AstNodeData::Dec
+
         | AstNodeData::Pop
 
         | AstNodeData::Inputn

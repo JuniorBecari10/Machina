@@ -1,5 +1,11 @@
 use crate::{ast::{AstNode, AstNodeData, ReducedAstNode, Value}, util::{is_identifier, is_label, parse_value, print_error, print_error_reduced, custom_split}};
 
+macro_rules! push_node {
+    ($node: expr, $nodes: expr, $line: expr, $i: expr) => {
+        $nodes.push(AstNode::new($node, $line.into(), $i))
+    };
+}
+
 macro_rules! parse_string {
     ($bytes: expr, $count: expr, $inst: literal) => {
         match parse_string($bytes, $count) {
@@ -49,7 +55,7 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         break;
                     }
 
-                    nodes.push(AstNode::new(AstNodeData::Label(s.into()), line.into(), i));
+                    push_node!(AstNodeData::Label(s.into()), nodes, line, i);
                 }
 
                 "pushc" => {
@@ -70,7 +76,7 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         }
                     };
 
-                    nodes.push(AstNode::new(AstNodeData::Pushc(value), line.into(), i));
+                    push_node!(AstNodeData::Pushc(value), nodes, line, i);
                 }
 
                 "pushv" => {
@@ -88,7 +94,7 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         break;
                     }
 
-                    nodes.push(AstNode::new(AstNodeData::Pushv(args[0].into()), line.into(), i));
+                    push_node!(AstNodeData::Pushv(args[0].into()), nodes, line, i)
                 }
 
                 "setc" => {
@@ -110,13 +116,13 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                     };
 
                     if !is_identifier(args[1]) {
-                        print_error(&format!("Identifier '{}' is not valid (valid identifiers only contain letters, numbers and underscores; the first character must not be a number)", args[0]), line, i);
+                        print_error(&format!("Identifier '{}' is not valid", args[0]), line, i);
 
                         had_error = true;
                         break;
                     }
 
-                    nodes.push(AstNode::new(AstNodeData::Setc(value, args[1].into()), line.into(), i));
+                    push_node!(AstNodeData::Setc(value, args[1].into()), nodes, line, i)
                 }
 
                 "popv" => {
@@ -134,31 +140,34 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         break;
                     }
 
-                    nodes.push(AstNode::new(AstNodeData::Popv(args[0].into()), line.into(), i));
+                    push_node!(AstNodeData::Popv(args[0].into()), nodes, line, i);
                 }
 
-                "pop" => nodes.push(AstNode::new(AstNodeData::Pop, line.into(), i)),
+                "pop" => push_node!(AstNodeData::Pop, nodes, line, i),
 
-                "add" => nodes.push(AstNode::new(AstNodeData::Add, line.into(), i)),
-                "sub" => nodes.push(AstNode::new(AstNodeData::Sub, line.into(), i)),
-                "mul" => nodes.push(AstNode::new(AstNodeData::Mul, line.into(), i)),
-                "div" => nodes.push(AstNode::new(AstNodeData::Div, line.into(), i)),
+                "add" => push_node!(AstNodeData::Add, nodes, line, i),
+                "sub" => push_node!(AstNodeData::Sub, nodes, line, i),
+                "mul" => push_node!(AstNodeData::Mul, nodes, line, i),
+                "div" => push_node!(AstNodeData::Div, nodes, line, i),
 
-                "inputn" => nodes.push(AstNode::new(AstNodeData::Inputn, line.into(), i)),
-                "inputb" => nodes.push(AstNode::new(AstNodeData::Inputb, line.into(), i)),
-                "inputs" => nodes.push(AstNode::new(AstNodeData::Inputs, line.into(), i)),
+                "inc" => push_node!(AstNodeData::Inc, nodes, line, i),
+                "dec" => push_node!(AstNodeData::Dec, nodes, line, i),
 
-                "print" => nodes.push(AstNode::new(AstNodeData::Print, line.into(), i)),
-                "println" => nodes.push(AstNode::new(AstNodeData::Println, line.into(), i)),
+                "inputn" => push_node!(AstNodeData::Inputn, nodes, line, i),
+                "inputb" => push_node!(AstNodeData::Inputb, nodes, line, i),
+                "inputs" => push_node!(AstNodeData::Inputs, nodes, line, i),
 
-                "cmpg" => nodes.push(AstNode::new(AstNodeData::Cmpg, line.into(), i)),
-                "cmpge" => nodes.push(AstNode::new(AstNodeData::Cmpge, line.into(), i)),
+                "print" => push_node!(AstNodeData::Print, nodes, line, i),
+                "println" => push_node!(AstNodeData::Println, nodes, line, i),
 
-                "cmpl" => nodes.push(AstNode::new(AstNodeData::Cmpl, line.into(), i)),
-                "cmple" => nodes.push(AstNode::new(AstNodeData::Cmple, line.into(), i)),
+                "cmpg" => push_node!(AstNodeData::Cmpg, nodes, line, i),
+                "cmpge" => push_node!(AstNodeData::Cmpge, nodes, line, i),
 
-                "cmpe" => nodes.push(AstNode::new(AstNodeData::Cmpe, line.into(), i)),
-                "cmpne" => nodes.push(AstNode::new(AstNodeData::Cmpne, line.into(), i)),
+                "cmpl" => push_node!(AstNodeData::Cmpl, nodes, line, i),
+                "cmple" => push_node!(AstNodeData::Cmple, nodes, line, i),
+
+                "cmpe" => push_node!(AstNodeData::Cmpe, nodes, line, i),
+                "cmpne" => push_node!(AstNodeData::Cmpne, nodes, line, i),
 
                 "jmp" => {
                     if args.len() != 1 {
@@ -175,7 +184,7 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         break;
                     }
 
-                    nodes.push(AstNode::new(AstNodeData::Jmp(args[0].into()), line.into(), i));
+                    push_node!(AstNodeData::Jmp(args[0].into()), nodes, line, i);
                 }
 
                 "jt" => {
@@ -193,7 +202,7 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         break;
                     }
 
-                    nodes.push(AstNode::new(AstNodeData::Jt(args[0].into()), line.into(), i));
+                    push_node!(AstNodeData::Jt(args[0].into()), nodes, line, i);
                 }
 
                 "jf" => {
@@ -211,7 +220,7 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         break;
                     }
 
-                    nodes.push(AstNode::new(AstNodeData::Jf(args[0].into()), line.into(), i));
+                    push_node!(AstNodeData::Jf(args[0].into()), nodes, line, i);
                 }
                     
                 
@@ -255,25 +264,28 @@ pub fn parse_reduced(bytes: &[u8]) -> Result<Vec<ReducedAstNode>, ()> {
             8 => nodes.push(ReducedAstNode(AstNodeData::Mul)),
             9 => nodes.push(ReducedAstNode(AstNodeData::Div)),
 
-            10 => nodes.push(ReducedAstNode(AstNodeData::Inputn)),
-            11 => nodes.push(ReducedAstNode(AstNodeData::Inputb)),
-            12 => nodes.push(ReducedAstNode(AstNodeData::Inputs)),
+            10 => nodes.push(ReducedAstNode(AstNodeData::Inc)),
+            11 => nodes.push(ReducedAstNode(AstNodeData::Dec)),
 
-            13 => nodes.push(ReducedAstNode(AstNodeData::Print)),
-            14 => nodes.push(ReducedAstNode(AstNodeData::Println)),
+            12 => nodes.push(ReducedAstNode(AstNodeData::Inputn)),
+            13 => nodes.push(ReducedAstNode(AstNodeData::Inputb)),
+            14 => nodes.push(ReducedAstNode(AstNodeData::Inputs)),
 
-            15 => nodes.push(ReducedAstNode(AstNodeData::Cmpg)),
-            16 => nodes.push(ReducedAstNode(AstNodeData::Cmpge)),
+            15 => nodes.push(ReducedAstNode(AstNodeData::Print)),
+            16 => nodes.push(ReducedAstNode(AstNodeData::Println)),
 
-            17 => nodes.push(ReducedAstNode(AstNodeData::Cmpl)),
-            18 => nodes.push(ReducedAstNode(AstNodeData::Cmple)),
+            17 => nodes.push(ReducedAstNode(AstNodeData::Cmpg)),
+            18 => nodes.push(ReducedAstNode(AstNodeData::Cmpge)),
 
-            19 => nodes.push(ReducedAstNode(AstNodeData::Cmpe)),
-            20 => nodes.push(ReducedAstNode(AstNodeData::Cmpne)),
+            19 => nodes.push(ReducedAstNode(AstNodeData::Cmpl)),
+            20 => nodes.push(ReducedAstNode(AstNodeData::Cmple)),
 
-            21 => nodes.push(ReducedAstNode(AstNodeData::Jmp(parse_string!(bytes, &mut count, "jmp")))),
-            22 => nodes.push(ReducedAstNode(AstNodeData::Jt(parse_string!(bytes, &mut count, "jt")))),
-            23 => nodes.push(ReducedAstNode(AstNodeData::Jf(parse_string!(bytes, &mut count, "jf")))),
+            21 => nodes.push(ReducedAstNode(AstNodeData::Cmpe)),
+            22 => nodes.push(ReducedAstNode(AstNodeData::Cmpne)),
+
+            23 => nodes.push(ReducedAstNode(AstNodeData::Jmp(parse_string!(bytes, &mut count, "jmp")))),
+            24 => nodes.push(ReducedAstNode(AstNodeData::Jt(parse_string!(bytes, &mut count, "jt")))),
+            25 => nodes.push(ReducedAstNode(AstNodeData::Jf(parse_string!(bytes, &mut count, "jf")))),
 
             _ => {
                 print_error_reduced(&format!("Invalid instruction code: {}", inst), count);

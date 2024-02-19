@@ -38,6 +38,9 @@ pub enum AstNodeData {
   Mul,
   Div,
 
+  Inc,
+  Dec,
+
   Inputn,
   Inputb,
   Inputs,

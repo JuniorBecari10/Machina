@@ -124,6 +124,32 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
           return Err(());
         }
       },
+
+      AstNodeData::Inc => {
+        let x = try_pop!(operation_stack, "inc", count);
+
+        if let Value::Num(n) = x {
+          operation_stack.push(Value::Num(n + 1.0));
+        }
+
+        else {
+          print_error_reduced(&format!("In 'inc' instruction: Cannot increment {}", x.as_str_debug()), count);
+          return Err(());
+        }
+      }
+
+      AstNodeData::Dec => {
+        let x = try_pop!(operation_stack, "dec", count);
+
+        if let Value::Num(n) = x {
+          operation_stack.push(Value::Num(n - 1.0));
+        }
+
+        else {
+          print_error_reduced(&format!("In 'dec' instruction: Cannot decrement {}", x.as_str_debug()), count);
+          return Err(());
+        }
+      }
       
       AstNodeData::Inputn => {
         let mut s = String::new();
