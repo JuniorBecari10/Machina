@@ -46,21 +46,23 @@ Instruction|Description
 `setc <value> <name>`|Sets the value of a variable to a constant value.
 `popv <name>`|Pops the last item from the stack into the specified variable.
 `pop`|Pops the last item from the stack and discards it.
-`add`|Pops two items from the stack, adds them and pushes the result.
-`sub`|Pops two items from the stack, subtracts them and pushes the result.
-`mul`|Pops two items from the stack, multiplies them and pushes the result.
-`div`|Pops two items from the stack, divides them and pushes the result.
+`add`|Pops two values from the stack, adds them and pushes the result.
+`sub`|Pops two values from the stack, subtracts them and pushes the result.
+`mul`|Pops two values from the stack, multiplies them and pushes the result.
+`div`|Pops two values from the stack, divides them and pushes the result.
+`inc`|Pops a value from the stack, increments it (add 1) and pushes the result.
+`dec`|Pops a value from the stack, decrements it (sub 1) and pushes the result.
 `inputn`|Prompts the user for a number and pushes the result.
 `inputb`|Prompts the user for a boolean and pushes the result.
 `inputs`|Prompts the user for a string and pushes the result.
 `print`|Pops the last item from the stack and prints it.
 `println`|Pops the last item from the stack and prints it, and then a newline.
-`cmpg`|Pops two items from the stack, compares them, and pushes `true` if the first is greater than the second.
-`cmpge`|Pops two items from the stack, compares them, and pushes `true` if the first is greater or equal to the second.
-`cmpl`|Pops two items from the stack, compares them, and pushes `true` if the first is lesser than the second.
-`cmple`|Pops two items from the stack, compares them, and pushes `true` if the first is lesser or equal to the second.
-`cmpe`|Pops two items from the stack, compares them, and pushes `true` if both are equal.
-`cmpne`|Pops two items from the stack, compares them, and pushes `true` if both are not equal.
+`cmpg`|Pops two values from the stack, compares them, and pushes `true` if the first is greater than the second.
+`cmpge`|Pops two values from the stack, compares them, and pushes `true` if the first is greater or equal to the second.
+`cmpl`|Pops two values from the stack, compares them, and pushes `true` if the first is lesser than the second.
+`cmple`|Pops two values from the stack, compares them, and pushes `true` if the first is lesser or equal to the second.
+`cmpe`|Pops two values from the stack, compares them, and pushes `true` if both are equal.
+`cmpne`|Pops two values from the stack, compares them, and pushes `true` if both are not equal.
 `jmp <label>`|Jumps to the specified label.
 `jt <label>`|Pops the last item from the stack and if it is equal to `true`, jumps to the specified label.
 `jf <label>`|Pops the last item from the stack and if it is equal to `false`, jumps to the specified label.
@@ -73,9 +75,11 @@ Type|Description|Rust Equivalent
 `str`|String|`String`
 `bool`|Boolean|`bool`
 
-Labels are declared using `#` as prefix.
+### Labels
 
-In `jmp`, `jt` and `jf` instructions, labels should be prefixed with `#` too.
+Labels are declared using `#` as prefix, like: `#label`.
+
+In `jmp`, `jt` and `jf` instructions, labels should be prefixed with `#` too, like: `jmp #label`.
 
 ## Examples
 
@@ -97,8 +101,7 @@ pushv counter
 println
 
 pushv counter
-pushc 1
-add
+inc
 popv counter
 
 pushv counter
