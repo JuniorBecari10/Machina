@@ -34,7 +34,7 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
     let mut had_error = false;
     let mut nodes: Vec<AstNode> = vec![];
     
-    for (i, line) in input.lines().into_iter().enumerate() {
+    for (i, line) in input.lines().enumerate() {
         if line.is_empty() {
           continue;
         }
