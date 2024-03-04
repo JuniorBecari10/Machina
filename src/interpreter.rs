@@ -24,6 +24,7 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
   let mut variables: VariableMap = HashMap::new();
   
   let mut count: usize = 0;
+  
   while count < ast.len() {
     match ast[count].0.clone() {
       AstNodeData::Label(_) => {},
@@ -120,7 +121,7 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
         }
         
         else {
-          print_error_reduced(&format!("In 'sub' instruction: Cannot divide {} and {}", a.as_str_debug(), b.as_str_debug()), count);
+          print_error_reduced(&format!("In 'div' instruction: Cannot divide {} and {}", a.as_str_debug(), b.as_str_debug()), count);
           return Err(());
         }
       },
@@ -301,58 +302,82 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
         }
       },
       
-      AstNodeData::Jmp(label) => {
-        let index = match labels.get(&label) {
-          Some(i) => *i,
-          None => {
-            print_error_reduced(&format!("In 'jmp' instruction: Label {} doesn't exist", label), count);
-            return Err(());
-          }
-        };
+      AstNodeData::Jmp => {
+        let label = try_pop!(operation_stack, "jmp", count);
 
-        count = index;
+        if let Value::Label(l) = label {
+          let index = match labels.get(&l) {
+            Some(i) => *i,
+            None => {
+              print_error_reduced(&format!("In 'jmp' instruction: Label {} doesn't exist", l), count);
+              return Err(());
+            }
+          };
+
+          count = index;
+        }
+        else {
+          print_error_reduced(&format!("In 'jmp' instruction: Cannot jump to {}; must be a label", label.as_str_debug()), count);
+          return Err(());
+        }
       },
-      AstNodeData::Jt(label) => {
-        let index = match labels.get(&label) {
-          Some(i) => *i,
-          None => {
-            print_error_reduced(&format!("In 'jt' instruction: Label {} doesn't exist", label), count);
-            return Err(());
+      AstNodeData::Jt => {
+        let label = try_pop!(operation_stack, "jt", count);
+
+        if let Value::Label(ref l) = label {
+          let index = match labels.get(l) {
+            Some(i) => *i,
+            None => {
+              print_error_reduced(&format!("In 'jt' instruction: Label {} doesn't exist", label.as_str_debug()), count);
+              return Err(());
+            }
+          };
+
+          let v = try_pop!(operation_stack, "jt", count);
+
+          if let Value::Bool(b) = v {
+            if b {
+              count = index;
+            }
           }
-        };
 
-        let v = try_pop!(operation_stack, "jt", count);
-
-        if let Value::Bool(b) = v {
-          if b {
-            count = index;
+          else {
+            print_error_reduced(&format!("In 'jf' instruction: Value {} is not a boolean", v.as_str_debug()), count);
+            return Err(());
           }
         }
-
         else {
-          print_error_reduced(&format!("In 'jt' instruction: Value {} is not a boolean", v.as_str_debug()), count);
-            return Err(());
+          print_error_reduced(&format!("In 'jt' instruction: Cannot jump to {}; must be a label", label.as_str_debug()), count);
+          return Err(());
         }
       }
-      AstNodeData::Jf(label) => {
-        let index = match labels.get(&label) {
-          Some(i) => *i,
-          None => {
-            print_error_reduced(&format!("In 'jf' instruction: Label {} doesn't exist", label), count);
+      AstNodeData::Jf => {
+        let label = try_pop!(operation_stack, "jf", count);
+
+        if let Value::Label(ref l) = label {
+          let index = match labels.get(l) {
+            Some(i) => *i,
+            None => {
+              print_error_reduced(&format!("In 'jf' instruction: Label {} doesn't exist", label.as_str_debug()), count);
+              return Err(());
+            }
+          };
+
+          let v = try_pop!(operation_stack, "jf", count);
+
+          if let Value::Bool(b) = v {
+            if !b {
+              count = index;
+            }
+          }
+
+          else {
+            print_error_reduced(&format!("In 'jf' instruction: Value {} is not a boolean", v.as_str_debug()), count);
             return Err(());
           }
-        };
-
-        let v = try_pop!(operation_stack, "jt", count);
-
-        if let Value::Bool(b) = v {
-          if !b {
-            count = index;
-          }
         }
-
         else {
-          print_error_reduced(&format!("In 'jf' instruction: Value {} is not a boolean", v.as_str_debug()), count);
+          print_error_reduced(&format!("In 'jf' instruction: Cannot jump to {}; must be a label", label.as_str_debug()), count);
           return Err(());
         }
       }

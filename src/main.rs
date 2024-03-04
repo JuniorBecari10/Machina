@@ -2,7 +2,6 @@ use std::{env, fs, process::exit};
 
 mod ast;
 mod parser;
-mod resolver;
 mod compiler;
 mod interpreter;
 mod util;
@@ -37,12 +36,6 @@ fn main() {
                 Ok(a) => a,
                 Err(_) => exit(1)
             };
-
-            let resolver_res = resolver::resolve(&ast);
-
-            if resolver_res.is_err() {
-                exit(1);
-            }
 
             if compiler::compile(&ast, &util::change_file_extension(&args[2], FILE_EXTENSION)).is_err() {
                 eprintln!("Couldn't write to file.");

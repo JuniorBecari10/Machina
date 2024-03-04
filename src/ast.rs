@@ -57,9 +57,9 @@ pub enum AstNodeData {
   Cmpe,
   Cmpne,
 
-  Jmp(String),
-  Jt(String),
-  Jf(String),
+  Jmp,
+  Jt,
+  Jf,
 }
 
 impl AstNodeData {
@@ -74,7 +74,9 @@ impl AstNodeData {
 pub enum Value {
   Num(f64),
   Str(String),
-  Bool(bool)
+  Bool(bool),
+  Label(String),
+  // TODO! Ref(String)
 }
 
 impl Value {
@@ -83,6 +85,7 @@ impl Value {
       Value::Num(n) => format!("{}", n),
       Value::Str(s) => s.clone(),
       Value::Bool(b) => format!("{}", b),
+      Value::Label(l) => l.clone(),
     }
   }
 
@@ -91,6 +94,7 @@ impl Value {
       Value::Num(n) => format!("num {}", n),
       Value::Str(s) => format!("str \"{}\"", s),
       Value::Bool(b) => format!("bool {}", b),
+      Value::Label(l) => format!("label {}", l),
     }
   }
 
@@ -99,9 +103,10 @@ impl Value {
     output.push(self.discriminant());
 
     match self {
-      Value::Num(n) => output.extend_from_slice(&n.to_ne_bytes()),
+      Value::Num(n) => output.extend_from_slice(&n.to_le_bytes()),
       Value::Str(s) => encode_string(&mut output, s),
       Value::Bool(b) => output.push(*b as u8),
+      Value::Label(l) => encode_string(&mut output, l),
     }
 
     output

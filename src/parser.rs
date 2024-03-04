@@ -1,4 +1,4 @@
-use crate::{ast::{AstNode, AstNodeData, ReducedAstNode, Value}, util::{is_identifier, is_label, parse_value, print_error, print_error_reduced, custom_split}};
+use crate::{ast::{AstNode, AstNodeData, ReducedAstNode, Value}, util::{is_identifier, is_label, print_error, print_error_reduced, custom_split}};
 
 macro_rules! push_node {
     ($node: expr, $nodes: expr, $line: expr, $i: expr) => {
@@ -66,7 +66,7 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         break;
                     }
 
-                    let value = match parse_value(args[0]) {
+                    let value = match parse_value(args[0], line, i) {
                         Some(v) => v,
                         None => {
                             print_error(&format!("Couldn't parse value '{}'", args[0]), line, i);
@@ -105,7 +105,7 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         break;
                     }
 
-                    let value = match parse_value(args[0]) {
+                    let value = match parse_value(args[0], line, i) {
                         Some(v) => v,
                         None => {
                             print_error(&format!("Couldn't parse value '{}'", args[0]), line, i);
@@ -169,60 +169,9 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                 "cmpe" => push_node!(AstNodeData::Cmpe, nodes, line, i),
                 "cmpne" => push_node!(AstNodeData::Cmpne, nodes, line, i),
 
-                "jmp" => {
-                    if args.len() != 1 {
-                        print_error(&format!("'jmp' instruction requires 1 argument, got {}", args.len()), line, i);
-                        
-                        had_error = true;
-                        break;
-                    }
-
-                    if !is_label(args[0]) {
-                        print_error(&format!("Label identifier '{}' is not valid", args[0]), line, i);
-
-                        had_error = true;
-                        break;
-                    }
-
-                    push_node!(AstNodeData::Jmp(args[0].into()), nodes, line, i);
-                }
-
-                "jt" => {
-                    if args.len() != 1 {
-                        print_error(&format!("'jt' instruction requires 1 argument, got {}", args.len()), line, i);
-                        
-                        had_error = true;
-                        break;
-                    }
-
-                    if !is_label(args[0]) {
-                        print_error(&format!("Label identifier '{}' is not valid", args[0]), line, i);
-
-                        had_error = true;
-                        break;
-                    }
-
-                    push_node!(AstNodeData::Jt(args[0].into()), nodes, line, i);
-                }
-
-                "jf" => {
-                    if args.len() != 1 {
-                        print_error(&format!("'jf' instruction requires 1 argument, got {}", args.len()), line, i);
-                        
-                        had_error = true;
-                        break;
-                    }
-
-                    if !is_label(args[0]) {
-                        print_error(&format!("Label identifier '{}' is not valid", args[0]), line, i);
-
-                        had_error = true;
-                        break;
-                    }
-
-                    push_node!(AstNodeData::Jf(args[0].into()), nodes, line, i);
-                }
-                    
+                "jmp" => push_node!(AstNodeData::Jmp, nodes, line, i),
+                "jt" => push_node!(AstNodeData::Jt, nodes, line, i),
+                "jf" => push_node!(AstNodeData::Jf, nodes, line, i),
                 
                 _ => {
                     print_error(&format!("Invalid instruction: '{inst}'"), line, i);
@@ -234,6 +183,34 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
     
     if had_error { Err(()) } else { Ok(nodes) }
 }
+
+pub fn parse_value(s: &str, code: &str, line: usize) -> Option<Value> {
+  if s == "true" || s == "false" {
+    Some(Value::Bool(s == "true"))
+  }
+
+  else if s.starts_with('\"') && s.ends_with('\"') {
+    Some(Value::Str(s[1..s.len() - 1].into()))
+  }
+
+  else if s.starts_with('#') {
+    if !is_label(s) {
+      print_error(&format!("Label identifier '{}' is not valid", s), code, line);
+    }
+
+    Some(Value::Label(s.into()))
+  }
+
+  else if let Ok(n) = s.parse::<f64>() {
+    Some(Value::Num(n))
+  }
+
+  else {
+    None
+  }
+}
+
+// ---
 
 pub fn parse_reduced(bytes: &[u8]) -> Result<Vec<ReducedAstNode>, ()> {
     let mut nodes = vec![];
@@ -283,9 +260,9 @@ pub fn parse_reduced(bytes: &[u8]) -> Result<Vec<ReducedAstNode>, ()> {
             21 => nodes.push(ReducedAstNode(AstNodeData::Cmpe)),
             22 => nodes.push(ReducedAstNode(AstNodeData::Cmpne)),
 
-            23 => nodes.push(ReducedAstNode(AstNodeData::Jmp(parse_string!(bytes, &mut count, "jmp")))),
-            24 => nodes.push(ReducedAstNode(AstNodeData::Jt(parse_string!(bytes, &mut count, "jt")))),
-            25 => nodes.push(ReducedAstNode(AstNodeData::Jf(parse_string!(bytes, &mut count, "jf")))),
+            23 => nodes.push(ReducedAstNode(AstNodeData::Jmp)),
+            24 => nodes.push(ReducedAstNode(AstNodeData::Jt)),
+            25 => nodes.push(ReducedAstNode(AstNodeData::Jf)),
 
             _ => {
                 print_error_reduced(&format!("Invalid instruction code: {}", inst), count);
@@ -358,6 +335,11 @@ fn parse_value_reduced(slice: &[u8], count: &mut usize) -> Option<Value> {
             else {
                 None
             }
+        }
+
+        3 => { // Label
+            let s = parse_string(slice, count)?;
+            Some(Value::Label(s))
         }
 
         _ => None

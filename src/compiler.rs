@@ -41,15 +41,16 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
         | AstNodeData::Cmple
 
         | AstNodeData::Cmpe
-        | AstNodeData::Cmpne => {}, // discriminant already pushed
+        | AstNodeData::Cmpne
+          
+        | AstNodeData::Jmp
+        | AstNodeData::Jt
+        | AstNodeData::Jf => {}, // discriminant already pushed
 
         AstNodeData::Pushv(var)
         | AstNodeData::Popv(var) => encode_string(&mut output, var),
 
-        AstNodeData::Label(label)
-        | AstNodeData::Jmp(label)
-        | AstNodeData::Jt(label)
-        | AstNodeData::Jf(label) => encode_string(&mut output, label),
+        AstNodeData::Label(label) => encode_string(&mut output, label),
     }
   }
 
@@ -58,6 +59,6 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
 }
 
 pub fn encode_string(output: &mut Vec<u8>, s: &str) {
-  output.extend_from_slice(&(s.len() as u32).to_ne_bytes());
+  output.extend_from_slice(&(s.len() as u32).to_le_bytes());
   output.extend_from_slice(s.as_bytes());
 }
