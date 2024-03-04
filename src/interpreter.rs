@@ -18,22 +18,6 @@ macro_rules! try_pop {
   };
 }
 
-fn get_var(scope: &VariableMap, stack: &ScopeStack, name: &str) -> Option<Value> {
-  match scope.get(name) {
-    Some(v) => Some(v.clone()),
-    None => {
-      for scope in stack.iter().rev() {
-        match scope.get(name) {
-          Some(v) => return Some(v.clone()),
-          None => continue
-        }
-      }
-
-      None
-    }
-  }
-}
-
 pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
   let labels = search_labels(ast);
 
@@ -432,6 +416,22 @@ fn search_labels(ast: &[ReducedAstNode]) -> LabelMap {
   }
   
   map
+}
+
+fn get_var(scope: &VariableMap, stack: &ScopeStack, name: &str) -> Option<Value> {
+  match scope.get(name) {
+    Some(v) => Some(v.clone()),
+    None => {
+      for scope in stack.iter().rev() {
+        match scope.get(name) {
+          Some(v) => return Some(v.clone()),
+          None => continue
+        }
+      }
+
+      None
+    }
+  }
 }
 
 fn input(out: &mut String) {
