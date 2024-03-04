@@ -28,7 +28,7 @@ pub enum AstNodeData {
   Pushc(Value),
   Pushv(String),
   
-  Setc(Value, String),
+  Setc(String, Value),
   Popv(String),
 
   Pop,
@@ -60,6 +60,9 @@ pub enum AstNodeData {
   Jmp,
   Jt,
   Jf,
+
+  Save,
+  Ret,
 }
 
 impl AstNodeData {

@@ -12,7 +12,7 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
 
     match n {
         AstNodeData::Pushc(val) => output.extend_from_slice(&val.encode()),
-        AstNodeData::Setc(val, var) => {
+        AstNodeData::Setc(var, val) => {
           output.extend_from_slice(&val.encode());
           encode_string(&mut output, var);
         },
@@ -45,7 +45,10 @@ pub fn compile(ast: &[AstNode], path: &str) -> Result<(), Error> {
           
         | AstNodeData::Jmp
         | AstNodeData::Jt
-        | AstNodeData::Jf => {}, // discriminant already pushed
+        | AstNodeData::Jf
+        
+        | AstNodeData::Save
+        | AstNodeData::Ret => {}, // discriminant already pushed
 
         AstNodeData::Pushv(var)
         | AstNodeData::Popv(var) => encode_string(&mut output, var),

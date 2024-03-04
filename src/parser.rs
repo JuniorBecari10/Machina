@@ -105,24 +105,24 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                         break;
                     }
 
-                    let value = match parse_value(args[0], line, i) {
-                        Some(v) => v,
-                        None => {
-                            print_error(&format!("Couldn't parse value '{}'", args[0]), line, i);
-                            
-                            had_error = true;
-                            break
-                        }
-                    };
-
-                    if !is_identifier(args[1]) {
+                    if !is_identifier(args[0]) {
                         print_error(&format!("Identifier '{}' is not valid", args[0]), line, i);
 
                         had_error = true;
                         break;
                     }
 
-                    push_node!(AstNodeData::Setc(value, args[1].into()), nodes, line, i)
+                    let value = match parse_value(args[1], line, i) {
+                        Some(v) => v,
+                        None => {
+                            print_error(&format!("Couldn't parse value '{}'", args[1]), line, i);
+                            
+                            had_error = true;
+                            break
+                        }
+                    };
+
+                    push_node!(AstNodeData::Setc(args[0].into(), value), nodes, line, i)
                 }
 
                 "popv" => {
@@ -172,6 +172,9 @@ pub fn parse(input: &str) -> Result<Vec<AstNode>, ()> {
                 "jmp" => push_node!(AstNodeData::Jmp, nodes, line, i),
                 "jt" => push_node!(AstNodeData::Jt, nodes, line, i),
                 "jf" => push_node!(AstNodeData::Jf, nodes, line, i),
+
+                "save" => push_node!(AstNodeData::Save, nodes, line, i),
+                "ret" => push_node!(AstNodeData::Ret, nodes, line, i),
                 
                 _ => {
                     print_error(&format!("Invalid instruction: '{inst}'"), line, i);
@@ -229,7 +232,7 @@ pub fn parse_reduced(bytes: &[u8]) -> Result<Vec<ReducedAstNode>, ()> {
                 let value = parse_value!(bytes, &mut count, "setc");
                 let name = parse_string!(bytes, &mut count, "setc");
 
-                nodes.push(ReducedAstNode(AstNodeData::Setc(value, name)));
+                nodes.push(ReducedAstNode(AstNodeData::Setc(name, value)));
             }
 
             4 => nodes.push(ReducedAstNode(AstNodeData::Popv(parse_string!(bytes, &mut count, "popv")))),
@@ -263,6 +266,9 @@ pub fn parse_reduced(bytes: &[u8]) -> Result<Vec<ReducedAstNode>, ()> {
             23 => nodes.push(ReducedAstNode(AstNodeData::Jmp)),
             24 => nodes.push(ReducedAstNode(AstNodeData::Jt)),
             25 => nodes.push(ReducedAstNode(AstNodeData::Jf)),
+
+            26 => nodes.push(ReducedAstNode(AstNodeData::Save)),
+            27 => nodes.push(ReducedAstNode(AstNodeData::Ret)),
 
             _ => {
                 print_error_reduced(&format!("Invalid instruction code: {}", inst), count);

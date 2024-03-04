@@ -43,7 +43,7 @@ Instruction|Description
 ---|---
 `pushc <value>`|Pushes a constant value onto the stack.
 `pushv <name>`|Pushes the value of a variable onto the stack.
-`setc <value> <name>`|Sets the value of a variable to a constant value.
+`setc <name> <value>`|Sets the value of a variable to a constant value.
 `popv <name>`|Pops the last item from the stack into the specified variable.
 `pop`|Pops the last item from the stack and discards it.
 `add`|Pops two values from the stack, adds them and pushes the result.
@@ -78,9 +78,9 @@ Type|Description
 
 ### Labels
 
-Labels are declared using `#` as prefix, like: `#label`.
+Labels are declared using `#` as prefix, such as: `#label`.
 
-In `jmp`, `jt` and `jf` instructions, labels should be prefixed with `#` too, like: `jmp #label`.
+They are treated as values in order to allow for compilers to implement first-class functions and dynamic dispatch.
 
 ## Examples
 
@@ -109,5 +109,6 @@ pushv counter
 pushc 10
 
 cmpg
-jt #loop
+pushc #loop
+jt
 ```

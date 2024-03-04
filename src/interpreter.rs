@@ -4,6 +4,7 @@ use crate::{ast::*, util::print_error_reduced};
 
 type LabelMap = HashMap<String, usize>;
 type VariableMap = HashMap<String, Value>;
+type ScopeStack = Vec<VariableMap>;
 
 macro_rules! try_pop {
   ($operation_stack: expr, $inst: literal, $count: expr) => {
@@ -17,11 +18,28 @@ macro_rules! try_pop {
   };
 }
 
+fn get_var(scope: &VariableMap, stack: &ScopeStack, name: &str) -> Option<Value> {
+  match scope.get(name) {
+    Some(v) => Some(v.clone()),
+    None => {
+      for scope in stack.iter().rev() {
+        match scope.get(name) {
+          Some(v) => return Some(v.clone()),
+          None => continue
+        }
+      }
+
+      None
+    }
+  }
+}
+
 pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
   let labels = search_labels(ast);
 
   let mut operation_stack: Vec<Value> = vec![];
   let mut variables: VariableMap = HashMap::new();
+  let mut scopes = vec![];
   
   let mut count: usize = 0;
   
@@ -31,12 +49,12 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
       
       AstNodeData::Pushc(value) => operation_stack.push(value),
       
-      AstNodeData::Pushv(var) => match variables.get(&var) {
+      AstNodeData::Pushv(var) => match get_var(&variables, &scopes, &var) {
         Some(value) => operation_stack.push(value.clone()),
         None => print_error_reduced(&format!("In 'pushv' instruction: Variable '{}' doesn't exist", var), count),
       },
       
-      AstNodeData::Setc(value, var) => { variables.insert(var, value); }, // TODO | check if the variable wasn't present
+      AstNodeData::Setc(var, value) => { variables.insert(var, value); }, // TODO | check if the variable wasn't present
       AstNodeData::Popv(var) => {
         variables.insert(var, match operation_stack.pop() {
           Some(v) => v,
@@ -379,6 +397,21 @@ pub fn interpret(ast: &[ReducedAstNode]) -> Result<(), ()> {
         else {
           print_error_reduced(&format!("In 'jf' instruction: Cannot jump to {}; must be a label", label.as_str_debug()), count);
           return Err(());
+        }
+      }
+
+      AstNodeData::Save => {
+        scopes.push(variables.clone());
+        variables = HashMap::new();
+      }
+
+      AstNodeData::Ret => {
+        variables = match scopes.pop() {
+          Some(s) => s,
+          None => {
+            print_error_reduced("In 'ret' instruction: Attempt to pop the scope stack while being empty", count);
+            return Err(());
+          }
         }
       }
     }
