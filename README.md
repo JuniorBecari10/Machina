@@ -63,17 +63,18 @@ Instruction|Description
 `cmple`|Pops two values from the stack, compares them, and pushes `true` if the first is lesser or equal to the second.
 `cmpe`|Pops two values from the stack, compares them, and pushes `true` if both are equal.
 `cmpne`|Pops two values from the stack, compares them, and pushes `true` if both are not equal.
-`jmp <label>`|Jumps to the specified label.
-`jt <label>`|Pops the last item from the stack and if it is equal to `true`, jumps to the specified label.
-`jf <label>`|Pops the last item from the stack and if it is equal to `false`, jumps to the specified label.
+`jmp <label>`|Pops a label from the stack and jumps to it.
+`jt <label>`|Pops a label from the stack, then pops one more item from the stack and if it is equal to `true`, jumps to the previously popped label.
+`jf <label>`|Pops a label from the stack, then pops one more item from the stack and if it is equal to `false`, jumps to the previously popped label.
 
 ### Types
 
-Type|Description|Rust Equivalent
----|---|---
-`num`|Number (float of 64 bits)|`f64`
-`str`|String|`String`
-`bool`|Boolean|`bool`
+Type|Description
+---|---
+`num`|Number (float of 64 bits)
+`str`|String
+`bool`|Boolean
+`label`|Label
 
 ### Labels
 
